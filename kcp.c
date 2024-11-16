@@ -99,8 +99,6 @@ PHP_FUNCTION(kcp_create)
 // udp_output function to be called by KCP
 int udp_output(const char *buf, int len, ikcpcb *kcp, void *user)
 {
-    php_printf("udp_output888: %s\n", buf);
-
     // Retrieve the custom data structure
     php_kcp_t *kcp_res = (php_kcp_t *)user;
 
@@ -120,15 +118,9 @@ int udp_output(const char *buf, int len, ikcpcb *kcp, void *user)
         return -1;
     }
 
-    php_printf("udp_output11: %s\n", buf);
-
-
-
     // Clean up
     zval_ptr_dtor(&params[0]);
     zval_ptr_dtor(&retval);
-
-    php_printf("udp_output222: %s\n", buf);
 
     return len; // Return the length of the data sent
 }
