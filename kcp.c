@@ -44,6 +44,10 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_send, 0, 0, 2)
     ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_flush, 0, 0, 1)
+    ZEND_ARG_INFO(0, kcp)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_recv, 0, 0, 2)
     ZEND_ARG_INFO(0, kcp)
     ZEND_ARG_INFO(0, maxsize)
@@ -71,6 +75,10 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_set_rx_minrto, 0, 0, 2)
     ZEND_ARG_INFO(0, kcp)
     ZEND_ARG_INFO(0, rx_minrto)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_waitsnd, 0, 0, 1)
+    ZEND_ARG_INFO(0, kcp)
 ZEND_END_ARG_INFO()
 
 PHP_FUNCTION(kcp_create)
@@ -234,6 +242,22 @@ PHP_FUNCTION(kcp_send)
     RETURN_LONG(ret);
 }
 
+PHP_FUNCTION(kcp_flush)
+{
+    zval *zkcp;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zkcp) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    php_kcp_t *kcp_res = (php_kcp_t *)zend_fetch_resource(Z_RES_P(zkcp), "KCP Resource", le_kcp);
+    if (!kcp_res) {
+        RETURN_FALSE;
+    }
+
+    ikcp_flush(kcp_res->kcp);
+    RETURN_TRUE;
+}
+
 PHP_FUNCTION(kcp_recv)
 {
     zval *zkcp;
@@ -330,6 +354,22 @@ PHP_FUNCTION(kcp_set_rx_minrto)
     RETURN_TRUE;
 }
 
+PHP_FUNCTION(kcp_waitsnd)
+{
+    zval *zkcp;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zkcp) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    php_kcp_t *kcp_res = (php_kcp_t *)zend_fetch_resource(Z_RES_P(zkcp), "KCP Resource", le_kcp);
+    if (!kcp_res) {
+        RETURN_FALSE;
+    }
+
+    int ret = ikcp_waitsnd(kcp_res->kcp);
+    RETURN_LONG(ret);
+}
+
 
 const zend_function_entry kcp_functions[] = {
     PHP_FE(kcp_create, arginfo_kcp_create)
@@ -338,11 +378,13 @@ const zend_function_entry kcp_functions[] = {
     PHP_FE(kcp_update, arginfo_kcp_update)
     PHP_FE(kcp_input, arginfo_kcp_input)
     PHP_FE(kcp_send, arginfo_kcp_send)
+    PHP_FE(kcp_flush, arginfo_kcp_flush)
     PHP_FE(kcp_recv, arginfo_kcp_recv)
     PHP_FE(kcp_nodelay, arginfo_kcp_nodelay)
     PHP_FE(kcp_wndsize, arginfo_kcp_wndsize)
     PHP_FE(kcp_setmtu, arginfo_kcp_setmtu)
     PHP_FE(kcp_set_rx_minrto, arginfo_kcp_set_rx_minrto)
+    PHP_FE(kcp_waitsnd, arginfo_kcp_waitsnd)
     PHP_FE_END
 };
 
