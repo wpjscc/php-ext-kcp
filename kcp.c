@@ -49,6 +49,30 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_recv, 0, 0, 2)
     ZEND_ARG_INFO(0, maxsize)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_nodelay, 0, 0, 5)
+    ZEND_ARG_INFO(0, kcp)
+    ZEND_ARG_INFO(0, nodelay)
+    ZEND_ARG_INFO(0, interval)
+    ZEND_ARG_INFO(0, resend)
+    ZEND_ARG_INFO(0, nc)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_wndsize, 0, 0, 3)
+    ZEND_ARG_INFO(0, kcp)
+    ZEND_ARG_INFO(0, sndwnd)
+    ZEND_ARG_INFO(0, rcvwnd)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_setmtu, 0, 0, 2)
+    ZEND_ARG_INFO(0, kcp)
+    ZEND_ARG_INFO(0, mtu)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_kcp_set_rx_minrto, 0, 0, 2)
+    ZEND_ARG_INFO(0, kcp)
+    ZEND_ARG_INFO(0, rx_minrto)
+ZEND_END_ARG_INFO()
+
 PHP_FUNCTION(kcp_create)
 {
     long conv;
@@ -234,6 +258,79 @@ PHP_FUNCTION(kcp_recv)
     efree(buffer);
 }
 
+PHP_FUNCTION(kcp_nodelay)
+{
+    zval *zkcp;
+    long nodelay;
+    long interval;
+    long resend;
+    long nc;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rllll", &zkcp, &nodelay, &interval, &resend, &nc) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    php_kcp_t *kcp_res = (php_kcp_t *)zend_fetch_resource(Z_RES_P(zkcp), "KCP Resource", le_kcp);
+    if (!kcp_res) {
+        RETURN_FALSE;
+    }
+
+    int ret = ikcp_nodelay(kcp_res->kcp, nodelay, interval, resend, nc);
+    RETURN_LONG(ret);
+}
+
+PHP_FUNCTION(kcp_wndsize)
+{
+    zval *zkcp;
+    long sndwnd;
+    long rcvwnd;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rll", &zkcp, &sndwnd, &rcvwnd) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    php_kcp_t *kcp_res = (php_kcp_t *)zend_fetch_resource(Z_RES_P(zkcp), "KCP Resource", le_kcp);
+    if (!kcp_res) {
+        RETURN_FALSE;
+    }
+
+    int ret = ikcp_wndsize(kcp_res->kcp, sndwnd, rcvwnd);
+    RETURN_LONG(ret);
+}
+
+PHP_FUNCTION(kcp_setmtu)
+{
+    zval *zkcp;
+    long mtu;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &zkcp, &mtu) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    php_kcp_t *kcp_res = (php_kcp_t *)zend_fetch_resource(Z_RES_P(zkcp), "KCP Resource", le_kcp);
+    if (!kcp_res) {
+        RETURN_FALSE;
+    }
+
+    int ret = ikcp_setmtu(kcp_res->kcp, mtu);
+    RETURN_LONG(ret);
+}
+
+PHP_FUNCTION(kcp_set_rx_minrto)
+{
+    zval *zkcp;
+    long rx_minrto;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl", &zkcp, &rx_minrto) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    php_kcp_t *kcp_res = (php_kcp_t *)zend_fetch_resource(Z_RES_P(zkcp), "KCP Resource", le_kcp);
+    if (!kcp_res) {
+        RETURN_FALSE;
+    }
+
+    kcp_res->kcp->rx_minrto = rx_minrto;
+    RETURN_TRUE;
+}
+
+
 const zend_function_entry kcp_functions[] = {
     PHP_FE(kcp_create, arginfo_kcp_create)
     PHP_FE(kcp_set_output_callback, arginfo_kcp_set_output_callback)
@@ -242,6 +339,10 @@ const zend_function_entry kcp_functions[] = {
     PHP_FE(kcp_input, arginfo_kcp_input)
     PHP_FE(kcp_send, arginfo_kcp_send)
     PHP_FE(kcp_recv, arginfo_kcp_recv)
+    PHP_FE(kcp_nodelay, arginfo_kcp_nodelay)
+    PHP_FE(kcp_wndsize, arginfo_kcp_wndsize)
+    PHP_FE(kcp_setmtu, arginfo_kcp_setmtu)
+    PHP_FE(kcp_set_rx_minrto, arginfo_kcp_set_rx_minrto)
     PHP_FE_END
 };
 
