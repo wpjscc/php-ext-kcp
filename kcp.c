@@ -155,10 +155,10 @@ PHP_FUNCTION(kcp_set_output_callback)
     }
 
     // Release the previous callback if it exists
-    if (&kcp_res->output_callback) {
+    // if (&kcp_res->output_callback) {
         // zval_ptr_dtor(&kcp_res->output_callback);
         // kcp_res->output_callback = NULL;
-    }
+    // }
 
     // Store the new callback
 
